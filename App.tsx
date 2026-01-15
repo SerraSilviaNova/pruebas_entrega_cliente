@@ -14,7 +14,7 @@ const INITIAL_CARS: Car[] = [
     combustible: FuelType.Gasolina,
     descripcion: 'El legendario deportivo japonés, perfeccionado para el siglo XXI con un motor de seis cilindros en línea.',
     precio: 65000,
-    imagen: 'https://images.unsplash.com/photo-1617469165786-8007eda3caa7?auto=format&fit=crop&q=80&w=800'
+    imagen: 'https://fotos.quecochemecompro.com/toyota-gr-supra/toyota-gr-supra-amarillo.jpeg?size=750x400'
   },
   {
     id_coche: '2',
@@ -51,7 +51,16 @@ const INITIAL_CARS: Car[] = [
     descripcion: 'ADN de rally en cada curva. Sistema Symmetrical AWD y el icónico alerón trasero que domina las miradas.',
     precio: 52000,
     imagen: 'https://images.unsplash.com/photo-1606220838315-056192d5e927?auto=format&fit=crop&q=80&w=800'
-  }
+  },
+  {
+  id_coche: '6',
+  marca: 'Lexus',
+  modelo: 'LFA',
+  combustible: FuelType.Gasolina,
+  descripcion: 'Obra maestra de la ingeniería japonesa. Motor V10 atmosférico con un sonido considerado uno de los mejores de la historia del automóvil.',
+  precio: 420000,
+  imagen: 'https://blog.consumerguide.com/wp-content/uploads/sites/2/2020/03/3943499_orig.jpg'
+}
 ];
 
 const Home: React.FC<{ cars: Car[], onBuy: (c: Car) => void, onManage: (c: Car) => void }> = ({ cars, onBuy, onManage }) => (
