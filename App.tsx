@@ -50,7 +50,7 @@ const INITIAL_CARS: Car[] = [
     combustible: FuelType.Gasolina,
     descripcion: 'ADN de rally en cada curva. Sistema Symmetrical AWD y el icónico alerón trasero que domina las miradas.',
     precio: 52000,
-    imagen: 'https://images.unsplash.com/photo-1606220838315-056192d5e927?auto=format&fit=crop&q=80&w=800'
+    imagen: 'https://www.cochesyconcesionarios.com/media/cache/1170x780/uploads/subaru/wrx-sti/4/sa/subaru-wrx-sti-05-9ad9fdb8dba1635f5ad55f0fc8a195729a22e265.jpeg'
   },
   {
   id_coche: '6',
