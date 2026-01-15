@@ -23,7 +23,7 @@ const INITIAL_CARS: Car[] = [
     combustible: FuelType.Gasolina,
     descripcion: 'Una pieza de coleccionista con motor rotativo Twin-Turbo. Pureza en la conducción y diseño atemporal.',
     precio: 85000,
-    imagen: 'https://images.unsplash.com/photo-1621259182978-f09e5e2aa871?auto=format&fit=crop&q=80&w=800'
+    imagen: 'https://media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/12/28/df/5a.jpg'
   },
   {
     id_coche: '3',
