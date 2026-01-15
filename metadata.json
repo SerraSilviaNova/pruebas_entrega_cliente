@@ -1,0 +1,8 @@
+
+{
+  "name": "Kitsune Cars - Luxury Dealership",
+  "description": "A sophisticated car dealership management application featuring a full CRUD for vehicle inventory and an AI-powered sales consultant.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
