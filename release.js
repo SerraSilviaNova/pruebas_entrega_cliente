@@ -4,59 +4,80 @@ import fs from 'fs';
 import path from 'path';
 
 // --- CONFIGURACIÓN ---
-const deployFolderName = "release-pruebas/cliente";
-const repoBaseURL = "github.com/dsegurap-nova/test_release.git";
+// const deployFolderName = "release-pruebas/cliente";
+// const repoBaseURL = "github.com/dsegurap-nova/test_release.git";
+const proyectos = [
+    {
+        nombre: "Kitsune Cars (Test)",
+        rutaLocal: "C:/proyectos/Kitsune-cars/pruebas_entrega_cliente",
+        repoBaseURL: "github.com/dsegurap-nova/test_release.git",
+        deployFolder: "release-pruebas/cliente"
+    },
+    {
+        nombre: "Proyecto Oficial Cliente",
+        rutaLocal: "C:/proyectos/Kitsune-cars/proyecto_principal",
+        repoBaseURL: "github.com/nova-aftersales/pruebas_entrega_cliente.git",
+        deployFolder: "entregas/oficial"
+    }
+];
 
 try {
-    // 1. Entrada de datos
-    const version = readline.question('Introduce la version (ej: v1.1): ');
-    
-    // El token se oculta con asteriscos gracias a hideEchoBack
+    // 2. MENÚ DE SELECCIÓN
+    console.log("\x1b[35m%s\x1b[0m", "=== GESTOR DE ENTREGAS ===");
+    const opciones = proyectos.map(p => p.nombre);
+    const index = readline.keyInSelect(opciones, 'Selecciona el proyecto a entregar:');
+
+    if (index === -1) {
+        console.log("Operación cancelada.");
+        process.exit(0);
+    }
+
+    const proyectoSlected = proyectos[index];
+
+    // 3. ENTRADA DE DATOS RESTANTES
+    const version = readline.question(`Introduce la version para ${proyectoSlected.nombre} (ej: v1.1): `);
     const token = readline.question('Introduce tu GitHub Access Token: ', {
         hideEchoBack: true,
         mask: '*'
     });
 
-    if (!token || !version) {
-        throw new Error("La versión y el token son obligatorios.");
-    }
+    if (!token || !version) throw new Error("Datos incompletos.");
 
-    const repoURL = `https://${token}@${repoBaseURL}`;
+    const repoURL = `https://${token}@${proyectoSlected.repoBaseURL}`;
 
-    // 2. Validación del token
-    console.log("\x1b[90m%s\x1b[0m", "Validando token y acceso al repositorio...");
+    // 4. VALIDACIÓN DE TOKEN
+    console.log("\x1b[90m%s\x1b[0m", "Validando acceso...");
     try {
         execSync(`git ls-remote ${repoURL} -h HEAD`, { stdio: 'ignore' });
     } catch (e) {
-        throw new Error("El token no es válido o no tienes acceso al repositorio. Revisa los permisos (scopes).");
+        throw new Error("Acceso denegado. Revisa tu token.");
     }
 
-    // 3. Definir rutas
-    const root = process.cwd();
+    // 5. DEFINICIÓN DE RUTAS
+    // Usamos la ruta local definida en el array
+    const root = proyectoSlected.rutaLocal;
     const parentDir = path.dirname(root);
-    const deployPath = path.join(parentDir, deployFolderName);
+    const deployPath = path.join(parentDir, proyectoSlected.deployFolder);
 
-    console.log(`\x1b[36m--- Preparando entrega de la version ${version} ---\x1b[0m`);
+    console.log(`\x1b[36m--- Ejecutando: ${proyectoSlected.nombre} (${version}) ---\x1b[0m`);
 
-    // 4. Preparar carpeta de destino (Manteniendo .git)
+    // --- EL RESTO DE LA LÓGICA (LIMPIEZA, COPIA Y GIT) SIGUE IGUAL ---
+    // (Asegúrate de que 'process.chdir(root)' antes de listar archivos)
+    
+    process.chdir(root); 
+
+    // Preparar carpeta destino
     if (!fs.existsSync(deployPath)) {
         fs.mkdirSync(deployPath, { recursive: true });
-        console.log("Carpeta de entrega creada por primera vez.");
     } else {
-        console.log("Limpiando version anterior (manteniendo historial Git)...");
-        const items = fs.readdirSync(deployPath);
-        for (const item of items) {
-            if (item !== '.git') {
-                const fullPath = path.join(deployPath, item);
-                fs.rmSync(fullPath, { recursive: true, force: true });
-            }
-        }
+        fs.readdirSync(deployPath).forEach(item => {
+            if (item !== '.git') fs.rmSync(path.join(deployPath, item), { recursive: true, force: true });
+        });
     }
 
-    // 5. Copiar archivos respetando .gitignore
-    console.log("Copiando archivos nuevos...");
-    const filesRaw = execSync('git ls-files --cached --others --exclude-standard', { encoding: 'utf8' });
-    const files = filesRaw.split('\n').filter(f => f.trim() !== '');
+    // Copiar archivos
+    const files = execSync('git ls-files --cached --others --exclude-standard', { encoding: 'utf8' })
+                    .split('\n').filter(f => f.trim());
 
     files.forEach(file => {
         const src = path.join(root, file);
@@ -65,50 +86,24 @@ try {
         fs.copyFileSync(src, dest);
     });
 
-    // 6. Operaciones de Git
+    // Git en destino
     process.chdir(deployPath);
-
     if (!fs.existsSync('.git')) {
-        console.log("\x1b[33m%s\x1b[0m", "Inicializando repositorio por primera vez...");
         execSync('git init');
         execSync(`git remote add origin ${repoURL}`);
         execSync('git branch -M main');
     } else {
-        // Actualizamos la URL con el nuevo token
         execSync(`git remote set-url origin ${repoURL}`);
-        console.log("Sincronizando historial con GitHub...");
-        execSync('git fetch origin');
-        execSync('git reset --soft origin/main');
     }
 
-    // 7. Commit y Push
     execSync('git add -A');
-    const status = execSync('git status --porcelain', { encoding: 'utf8' });
+    execSync(`git commit -m "Entrega ${version}"`);
+    execSync(`git tag -a ${version} -m "Tag ${version}"`);
+    execSync('git push origin main');
+    execSync(`git push origin ${version} --force`);
 
-    if (status.trim() !== '') {
-        execSync(`git commit -m "Entrega version ${version}"`);
-
-        // Manejo de Tags
-        try {
-            const tags = execSync('git tag -l', { encoding: 'utf8' });
-            if (tags.includes(version)) {
-                console.log("\x1b[33m%s\x1b[0m", `⚠️ El tag ${version} ya existe. Actualizando...`);
-                execSync(`git tag -d ${version}`);
-            }
-        } catch (e) { /* No hay tags */ }
-
-        execSync(`git tag -a ${version} -m "Tag para la version ${version}"`);
-
-        console.log("\x1b[36m%s\x1b[0m", "Subiendo cambios al repositorio del cliente...");
-        execSync('git push origin main');
-        execSync(`git push origin ${version} --force`);
-
-        console.log("\x1b[32m%s\x1b[0m", `✅ Entrega exitosa. Historial conservado.`);
-    } else {
-        console.log("\x1b[33m%s\x1b[0m", "⚠️ No hay cambios detectados respecto a la entrega anterior.");
-    }
+    console.log("\x1b[32m%s\x1b[0m", `✅ ¡Logrado! Proyecto ${proyectoSlected.nombre} subido.`);
 
 } catch (error) {
     console.error("\x1b[31m%s\x1b[0m", `❌ Error: ${error.message}`);
-    process.exit(1);
 }

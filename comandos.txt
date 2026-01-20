@@ -36,3 +36,10 @@ npm install readline-sync
 
 y ejecutar:
 node release.js
+
+
+Cómo escalarlo aún más
+
+Si el día de mañana tienes 50 proyectos, en lugar de tenerlos en el código, 
+podrías guardarlos en un archivo llamado proyectos.json y hacer que Node.js lo lea 
+con fs.readFileSync. ¡Así el código quedaría súper limpio!
