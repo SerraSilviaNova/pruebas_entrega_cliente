@@ -1,0 +1,13 @@
+Para ejecutar el programa:
+.\release.ps1 -DeployFolderName "pruebas_entrega_cliente_entrega" -Version "v1.0"
+
+Cambiar la versión:
+[string]$Version = "v1.0"
+
+cd "C:\proyectos\Kitsune-cars\pruebas_entrega_cliente" 
+.\release.ps1 -Version "v2.0"
+
+
+Si queremos forzar el push y nos da igual el historial:
+git push -u origin main --force
+
