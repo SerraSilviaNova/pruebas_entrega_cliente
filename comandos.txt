@@ -30,3 +30,9 @@ Pasos para generarlo:
 
     ¡Cópialo y guárdalo! Una vez que cierres la página, no podrás volver a verlo.
 
+
+Para node.js hay que tener instalado:
+npm install readline-sync
+
+y ejecutar:
+node release.js
