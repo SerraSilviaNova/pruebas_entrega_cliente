@@ -1,6 +1,12 @@
 Para ejecutar el programa:
 .\release.ps1 -DeployFolderName "pruebas_entrega_cliente_entrega" -Version "v1.0"
 
+Manera 2:
+cd "C:\proyectos\Kitsune-cars\pruebas_entrega_cliente"
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+.\release.ps1
+.\release.ps1 -Version "v1.0"
+
 Cambiar la versión:
 [string]$Version = "v1.0"
 

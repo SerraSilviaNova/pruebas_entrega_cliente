@@ -1,90 +1,75 @@
 param(
     [string]$DeployFolderName = "release-pruebas/cliente",
-    [string]$Version = "v1.0",
+    [string]$Version = $(Read-Host "Introduce la versión (ej: v1.1)"),
     [string]$RepoURL = "https://github.com/nova-aftersales/pruebas_entrega_cliente.git"
 )
 
 $ErrorActionPreference = "Stop"
 
 try {
-    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-        throw "Git no está instalado o no está en el PATH."
-    }
-
-    # Carpeta raíz del proyecto
+    # 1. Definir rutas
     $root = $PSScriptRoot
-    if (-not $root) {
-        $root = Get-Location
-    }
-
-    # Carpeta padre del proyecto (un nivel por encima)
+    if (-not $root) { $root = Get-Location }
     $parentDir = Split-Path $root -Parent
     $deployPath = Join-Path $parentDir $DeployFolderName
 
-    # Limpiar carpeta de deploy
-    if (Test-Path $deployPath) {
-        Remove-Item $deployPath -Recurse -Force
+    Write-Host "--- Preparando entrega de la versión $Version ---" -ForegroundColor Cyan
+
+    # 2. Crear carpeta si no existe o limpiar si existe (manteniendo .git)
+    if (-not (Test-Path $deployPath)) {
+        New-Item -ItemType Directory -Path $deployPath | Out-Null
+        Write-Host "Carpeta de entrega creada por primera vez."
     }
-    New-Item -ItemType Directory -Path $deployPath | Out-Null
+    else {
+        Write-Host "Limpiando versión anterior (manteniendo historial Git)..."
+        # Borra todo menos la carpeta .git
+        Get-ChildItem -Path $deployPath -Exclude ".git" | Remove-Item -Recurse -Force
+    }
 
-    Write-Host "Copiando archivos desde '$root' a '$deployPath'..."
-
+    # 3. Copiar archivos nuevos (equivalente a tu robocopy pero respetando .gitignore)
     Push-Location $root
-
-    # Obtener archivos respetando .gitignore
     $files = git ls-files --cached --others --exclude-standard
-    $total = $files.Count
-    if ($total -eq 0) {
-        Write-Host "No se encontraron archivos para copiar."
-        Pop-Location
-        exit 0
-    }
-
-    $index = 0
     foreach ($file in $files) {
-        $index++
-        $source = Join-Path $root $file
         $dest = Join-Path $deployPath $file
         $destDir = Split-Path $dest -Parent
+        if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
+        Copy-Item (Join-Path $root $file) $dest -Force
+    }
+    Pop-Location
 
-        if (-not (Test-Path $destDir)) {
-            New-Item -ItemType Directory -Path $destDir -Force | Out-Null
-        }
+    # 4. Operaciones de Git en la carpeta de entrega
+    Push-Location $deployPath
 
-        Copy-Item $source $dest -Force
+    # Inicializar solo si es la primera vez
+    if (-not (Test-Path ".git")) {
+        Write-Host "Inicializando repositorio por primera vez..." -ForegroundColor Yellow
+        git init
+        git remote add origin $RepoURL
+        git branch -M main
+    }
 
-        $percent = [int](($index / $total) * 100)
-        Write-Progress -Activity "Copiando archivos..." `
-            -Status "$percent% completado ($index de $total)" `
-            -PercentComplete $percent
+    # Añadir cambios (Git detectará archivos nuevos, modificados y ELIMINADOS)
+    git add -A
+    
+    # Comprobar si hay algo que enviar
+    if (git status --porcelain) {
+        git commit -m "Entrega versión $Version"
+        git tag -a $Version -m "Tag para la versión $Version"
+        
+        Write-Host "Subiendo cambios al repositorio del cliente..." -ForegroundColor Cyan
+        # IMPORTANTE: Sin -f para no borrar el historial previo
+        git push origin main
+        git push origin $Version
+        
+        Write-Host "✅ Entrega exitosa. Historial conservado." -ForegroundColor Green
+    }
+    else {
+        Write-Host "⚠️ No hay cambios detectados respecto a la entrega anterior." -ForegroundColor Yellow
     }
 
     Pop-Location
-    Write-Progress -Activity "Copiando archivos..." -Completed -Status "Copia completada"
-    Write-Host "Copia finalizada correctamente. Se copiaron $total archivos."
-
-    # Inicializar Git en la carpeta de entrega
-    Push-Location $deployPath
-    git init
-    git add .
-    git commit -m "Entrega automatizada de la version $Version"
-
-    # Conectar con el repo del cliente
-    git remote add origin $RepoURL
-    git branch -M main
-    git push -u origin main
-
-    # Crear tag de versión
-    git tag -a $Version -m "Version $Version"
-    git push origin $Version
-
-    Pop-Location
-    Write-Host "Entrega automatizada completada. Tag $Version creado y subido a GitHub."
-
-    exit 0
 }
 catch {
-    Write-Progress -Activity "Proceso de entrega..." -Completed -Status "Error"
-    Write-Host "Error durante la entrega: $($_.Exception.Message)"
+    Write-Host "❌ Error: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
 }
