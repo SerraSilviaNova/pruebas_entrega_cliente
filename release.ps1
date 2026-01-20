@@ -1,6 +1,6 @@
 param(
     [string]$DeployFolderName = "release-pruebas/cliente",
-    [string]$Version = $(Read-Host "Introduce la versión (ej: v1.1)"),
+    [string]$Version = $(Read-Host "Introduce la version (ej: v1.1)"),
     [string]$RepoURL = "https://github.com/nova-aftersales/pruebas_entrega_cliente.git"
 )
 
@@ -13,7 +13,7 @@ try {
     $parentDir = Split-Path $root -Parent
     $deployPath = Join-Path $parentDir $DeployFolderName
 
-    Write-Host "--- Preparando entrega de la versión $Version ---" -ForegroundColor Cyan
+    Write-Host "--- Preparando entrega de la version $Version ---" -ForegroundColor Cyan
 
     # 2. Crear carpeta si no existe o limpiar si existe (manteniendo .git)
     if (-not (Test-Path $deployPath)) {
@@ -21,7 +21,7 @@ try {
         Write-Host "Carpeta de entrega creada por primera vez."
     }
     else {
-        Write-Host "Limpiando versión anterior (manteniendo historial Git)..."
+        Write-Host "Limpiando version anterior (manteniendo historial Git)..."
         # Borra todo menos la carpeta .git
         Get-ChildItem -Path $deployPath -Exclude ".git" | Remove-Item -Recurse -Force
     }
@@ -37,7 +37,7 @@ try {
     }
     Pop-Location
 
-    # 4. Operaciones de Git en la carpeta de entrega
+   # 4. Operaciones de Git en la carpeta de entrega
     Push-Location $deployPath
 
     # Inicializar solo si es la primera vez
@@ -46,24 +46,32 @@ try {
         git init
         git remote add origin $RepoURL
         git branch -M main
+    } else {
+        # Sincronizar con el servidor para evitar el error [rejected]
+        Write-Host "Sincronizando historial con GitHub..."
+        git fetch origin
+        git reset --soft origin/main # Alinea el historial sin borrar tus archivos nuevos
     }
 
-    # Añadir cambios (Git detectará archivos nuevos, modificados y ELIMINADOS)
+    # Añadir cambios
     git add -A
     
-    # Comprobar si hay algo que enviar
     if (git status --porcelain) {
-        git commit -m "Entrega versión $Version"
-        git tag -a $Version -m "Tag para la versión $Version"
+        git commit -m "Entrega version $Version"
+        
+        if (git tag -l $Version) {
+            Write-Host "⚠️ El tag $Version ya existe. Borrando tag local anterior para actualizar..." -ForegroundColor Yellow
+            git tag -d $Version
+        }
+        git tag -a $Version -m "Tag para la version $Version"
         
         Write-Host "Subiendo cambios al repositorio del cliente..." -ForegroundColor Cyan
-        # IMPORTANTE: Sin -f para no borrar el historial previo
+        # Pull con estrategia de union para asegurar que el historial continúe
         git push origin main
-        git push origin $Version
+        git push origin $Version --force # Forzamos el tag por si ya existía
         
         Write-Host "✅ Entrega exitosa. Historial conservado." -ForegroundColor Green
-    }
-    else {
+    } else {
         Write-Host "⚠️ No hay cambios detectados respecto a la entrega anterior." -ForegroundColor Yellow
     }
 
