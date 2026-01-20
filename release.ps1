@@ -17,11 +17,11 @@ try {
         $root = Get-Location
     }
 
-    # Carpeta padre del proyecto
+    # Carpeta padre del proyecto (un nivel por encima)
     $parentDir = Split-Path $root -Parent
     $deployPath = Join-Path $parentDir $DeployFolderName
 
-    # Limpiar carpeta de entrega
+    # Limpiar carpeta de deploy
     if (Test-Path $deployPath) {
         Remove-Item $deployPath -Recurse -Force
     }
@@ -55,8 +55,8 @@ try {
 
         $percent = [int](($index / $total) * 100)
         Write-Progress -Activity "Copiando archivos..." `
-                       -Status "$percent% completado ($index de $total)" `
-                       -PercentComplete $percent
+            -Status "$percent% completado ($index de $total)" `
+            -PercentComplete $percent
     }
 
     Pop-Location
