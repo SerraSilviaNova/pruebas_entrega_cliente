@@ -2,8 +2,6 @@ Para ejecutar el programa:
 .\release.ps1 -DeployFolderName "pruebas_entrega_cliente_entrega" -Version "v1.0"
 
 Manera 2:
-cd "C:\proyectos\Kitsune-cars\pruebas_entrega_cliente"
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 .\release.ps1
 .\release.ps1 -Version "v1.0"
 
@@ -16,4 +14,19 @@ cd "C:\proyectos\Kitsune-cars\pruebas_entrega_cliente"
 
 Si queremos forzar el push y nos da igual el historial:
 git push -u origin main --force
+
+Generar access token:
+Pasos para generarlo:
+
+    Ve a tu GitHub: Settings > Developer Settings > Personal access tokens > Tokens (classic).
+
+    Haz clic en Generate new token (classic).
+
+    Dale un nombre (ej: "Token Entrega Cliente").
+
+    Selecciona los permisos (Scopes): Para que el script funcione, marca la casilla que dice repo (esto da acceso a leer y escribir en repositorios privados).
+
+    Haz clic en Generate token.
+
+    ¡Cópialo y guárdalo! Una vez que cierres la página, no podrás volver a verlo.
 

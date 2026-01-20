@@ -1,8 +1,30 @@
 param(
     [string]$DeployFolderName = "release-pruebas/cliente",
     [string]$Version = $(Read-Host "Introduce la version (ej: v1.1)"),
-    [string]$RepoURL = "https://github.com/nova-aftersales/pruebas_entrega_cliente.git"
+    # Pedimos el token de forma segura (se verán asteriscos)
+    [System.Security.SecureString]$SecureToken = $(Read-Host "Introduce tu GitHub Access Token" -AsSecureString),
+   # [string]$RepoBaseURL = "github.com/nova-aftersales/pruebas_entrega_cliente.git"
+   [string]$RepoBaseURL = "github.com/dsegurap-nova/test_release.git"
 )
+# A - Convertimos el token seguro a texto plano solo para construir la URL de Git
+$BstrToken = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureToken)
+$PlainTextToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BstrToken)
+
+# B - Construimos la URL con el token para la autenticación
+$RepoURL = "https://$($PlainTextToken)@$RepoBaseURL"
+
+# C-  Validación del token: probamos acceso al repositorio 
+Write-Host "Validando token y acceso al repositorio..." -ForegroundColor Gray
+$testAuth = git ls-remote $RepoURL -h HEAD 2>$null
+if ($null -eq $testAuth) {
+    # Limpiamos la memoria antes de lanzar el error
+    [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($BstrToken)
+    throw "El token no es válido o no tienes acceso al repositorio. Revisa los permisos (scopes) del token."
+}
+
+# D - Limpieza de seguridad: borramos el rastro del token de la memoria de inmediato
+[System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($BstrToken)
+
 
 $ErrorActionPreference = "Stop"
 
@@ -37,7 +59,7 @@ try {
     }
     Pop-Location
 
-   # 4. Operaciones de Git en la carpeta de entrega
+    # 4. Operaciones de Git en la carpeta de entrega
     Push-Location $deployPath
 
     # Inicializar solo si es la primera vez
@@ -46,11 +68,14 @@ try {
         git init
         git remote add origin $RepoURL
         git branch -M main
-    } else {
-        # Sincronizar con el servidor para evitar el error [rejected]
+    }
+    else {
+        # ¡IMPORTANTE! Actualizamos la URL para usar el token nuevo que acabas de introducir
+        git remote set-url origin $RepoURL
+        
         Write-Host "Sincronizando historial con GitHub..."
         git fetch origin
-        git reset --soft origin/main # Alinea el historial sin borrar tus archivos nuevos
+        git reset --soft origin/main 
     }
 
     # Añadir cambios
@@ -71,7 +96,8 @@ try {
         git push origin $Version --force # Forzamos el tag por si ya existía
         
         Write-Host "✅ Entrega exitosa. Historial conservado." -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "⚠️ No hay cambios detectados respecto a la entrega anterior." -ForegroundColor Yellow
     }
 
