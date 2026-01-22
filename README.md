@@ -1,4 +1,4 @@
-#Gestor de Entregas Automatizado
+# Gestor de Entregas Automatizado
 
 Este script de Node.js permite automatizar el proceso de despliegue, versionado y subida a GitHub de múltiples proyectos. Centraliza la gestión de versiones mediante etiquetas (tags) y asegura que los archivos sensibles o innecesarios no se incluyan en la entrega.
 
