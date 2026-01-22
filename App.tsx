@@ -60,7 +60,16 @@ const INITIAL_CARS: Car[] = [
   descripcion: 'Obra maestra de la ingeniería japonesa. Motor V10 atmosférico con un sonido considerado uno de los mejores de la historia del automóvil.',
   precio: 420000,
   imagen: 'https://blog.consumerguide.com/wp-content/uploads/sites/2/2020/03/3943499_orig.jpg'
-}
+},
+{
+  id_coche: '7',
+  marca: 'Porsche',
+  modelo: '911 GT3 RS (992)',
+  combustible: FuelType.Gasolina,
+  descripcion: 'El pináculo del rendimiento en pista homologado para calle. Destaca por su aerodinámica activa y su motor bóxer de 6 cilindros capaz de girar a 9.000 rpm.',
+  precio: 285000,
+  imagen: 'https://hips.hearstapps.com/hmg-prod/images/2019-porsche-gt3-rs-2-1550078224.jpg?crop=0.720xw:0.720xh;0.102xw,0.205xh&resize=640:*'
+},
 ];
 
 const Home: React.FC<{ cars: Car[], onBuy: (c: Car) => void, onManage: (c: Car) => void }> = ({ cars, onBuy, onManage }) => (

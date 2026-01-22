@@ -3,12 +3,20 @@ import readline from "readline-sync";
 import fs from "fs";
 import path from "path";
 // importamos los proyectos desde un archivo JSON
-import projectsConfig from "./environment.json" assert { type: "json" };
+import projectsConfig from "./environment.json" with { type: "json" };
 
 // 1. CONFIGURACIÓN DE PROYECTOS
 
+const projectsData = projectsConfig.projects;
+
+if (!Array.isArray(projectsData)) {
+    console.error("\x1b[31m%s\x1b[0m", "Error: No se encontró un array de proyectos en environment.json");
+    console.log("Contenido detectado:", projectsConfig);
+    process.exit(1);
+}
+
 // Mapeamos los proyectos para facilitar su uso
-const projects = projectsConfig.map((project) => ({
+const projects = projectsData.map((project) => ({
   name: project.name,
   src: project.src,
   token: project.token,
