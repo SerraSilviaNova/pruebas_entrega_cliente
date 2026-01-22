@@ -28,9 +28,8 @@ Este script de Node.js permite automatizar el proceso de despliegue, versionado 
 ## Configuración (environment.json)
 
 Para que el script funcione, debes crear un archivo llamado environment.json en la raíz del script. Este archivo contiene credenciales sensibles y debe estar incluido en tu .gitignore.
-Estructura del archivo:
-JSON
-
+Estructura del archivo JSON:
+```
 {
   "projects": [
     {
@@ -42,7 +41,7 @@ JSON
     }
   ]
 }
-
+```
 ### Campos detallados:
 
     name: El nombre que aparecerá en el menú de selección.
@@ -139,14 +138,14 @@ node nombre_de_tu_archivo.js
 
 Para que el script funcione sin problemas de seguridad, tu estructura de carpetas debería verse así:
 Plaintext
-
+```
 /mi-gestor-entregas
 ├── node_modules/
 ├── environment.json      <-- (Ignorado en .gitignore)
 ├── gestor.js             <-- (Tu script principal)
 ├── package.json
 └── .gitignore            <-- (Debe contener "environment.json")
-
+```
     [!TIP] ¿Qué pasa si me equivoco de versión? Si el script falla porque la versión ya existe en GitHub, simplemente vuelve a ejecutarlo y asigna un número superior (ej: de v1.1 a v1.1.1).
 
 ## Licencia y Uso
